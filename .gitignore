@@ -1,0 +1,7 @@
+.vscode/settings.json
+use_later/*
+certs/*
+__pycache__/*
+node_modules/*
+cards_jpeg_zip/*
+package-lock.json

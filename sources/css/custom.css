@@ -1,0 +1,147 @@
+/*!
+ * Start Bootstrap - Simple Sidebar (https://startbootstrap.com/template-overviews/simple-sidebar)
+ * Copyright 2013-2019 Start Bootstrap
+ * Licensed under MIT (https://github.com/BlackrockDigital/startbootstrap-simple-sidebar/blob/master/LICENSE)
+ */
+body {
+  background-image: url("/static/images/bglarge.jpg");
+  background-repeat: no-repeat;
+  background-size: auto;
+  color: #fff;
+}
+
+#sidebar-wrapper {
+  resize: both;  
+  /* min-height: 100vh; */
+  /* min-width: 240px; */
+  width: 100vw;
+  height: 70vh;
+  top: 20vh;
+  padding: 0px 0px 0px 10px;
+  border: 1px solid #333333;
+  background-color: #111;
+  overflow: auto;
+  z-index: 5;
+  position: fixed;
+}
+.image-upload>input {
+  display: none;
+}
+.msgimg>img {
+max-width: 100%;
+}
+.xyz {
+  position: relative;
+  float: left;
+}
+/* The overlay effect (full height and width) - lays on top of the container and over the image */
+.overlay {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  width: 100%;
+  opacity: 0;
+  transition: .3s ease;
+  background-color: red;
+}
+/* Make the image to responsive */
+.xyz img{
+  width: 100%;
+  height: 100%;
+}
+
+
+.overlayshow {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  width: 100%;
+  opacity: 0.5;
+  background-color: red;
+}
+.chatimg {
+  display: block;
+}
+.chatimg img{
+   max-width: 100%; 
+   height: auto; 
+}
+
+.notification .badge {
+  position: relative;
+  top: -10px;
+  right: -10px;
+  padding: 5px 10px;
+  border-radius: 50%;
+  background-color: red;
+  color: white;
+}
+#sidebar-wrapper .sidebar-heading {
+  padding: 0.875rem 1.25rem;
+  font-size: 1.2rem;
+}
+
+/* #sidebar-wrapper .list-group {
+  width: 15rem;
+} */
+
+#page-content-wrapper {
+  min-width: 100vw;
+
+}
+
+#wrapper.toggled #sidebar-wrapper {
+  margin-left: 0;
+}
+
+@media (min-width: 768px) {
+  #sidebar-wrapper {
+    margin-left: 0;
+  }
+
+  #page-content-wrapper {
+    min-width: 0;
+    width: 100%;
+  }
+
+  #wrapper.toggled #sidebar-wrapper {
+    margin-left: -15rem;
+  }
+}
+pre {
+  white-space: pre-wrap;       /* Since CSS 2.1 */
+  white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+  white-space: -pre-wrap;      /* Opera 4-6 */
+  white-space: -o-pre-wrap;    /* Opera 7 */
+  word-wrap: break-word;       /* Internet Explorer 5.5+ */
+}
+input {
+  background-color: rgba(00, 123, 255, 0.4);
+}
+video {
+  width: 320px;
+  height: 240px;
+  max-width: 100%;  
+  background-color:rgba(00,00, 00, 0.3);
+  transform: rotateY(180deg);
+  -webkit-transform:rotateY(180deg); /* Safari and Chrome */
+  -moz-transform:rotateY(180deg); /* Firefox */
+}
+
+.board { display:block; 
+  border:1px solid #ffffff;
+  height: 74vw; 
+  width: 50vw;
+} /* To remove the scrollbars */
+
+.deck div { display:block; 
+  border:1px solid #ffffff;
+  height: 68vh; 
+  width: 5vw;
+} /* To remove the scrollbars */

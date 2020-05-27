@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="description" content="" />
+  <meta name="author" content="" />
+  <link rel="shortcut icon" href="#" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>RSVP Vidchat</title>
+
+  <!-- Bootstrap core CSS -->
+  <link href={{ static_url("vendor/bootstrap/css/bootstrap.css") }} rel="stylesheet">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+  <!-- Add icon library -->
+  <script src='https://kit.fontawesome.com/a076d05399.js'></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <!-- Custom styles for this template -->
+  <link href={{ static_url("css/custom.css") }} rel="stylesheet">
+  <script src={{ static_url("js/gameroom.js") }}></script>
+
+</head>
+
+<body>
+  <div class="container">
+    <!-- <h2>Modal Example</h2> -->
+    <!-- Trigger the modal with a button -->
+    <div class="row">
+      <div class="col-4">
+        <button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#myModal1"
+          style="background-color: rgba(79, 132, 125, 0.8);">Menu</button>
+      </div>
+      <div class="col-4 notification">
+        <button type=" button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#myModal2"
+          onclick="removeUnreadCount();" style="background-color: rgba(79, 132, 125, 0.8);">Chat</button>
+        <span class=" badge" id="badge">0</span>
+      </div>
+      <div class="col-4">
+        <spa><a class="btn btn-info btn-lg" style="background-color: rgba(79, 132, 125, 0.8);" href="/"
+            onclick="closeChat();">
+            <i class='fas fa-times-circle'
+              style="font-size:24px;color:red;background-color: Transparent;outline:none;"></i>
+            Exit</a></span>
+      </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal" id="myModal1" role="dialog">
+      <div class="modal-dialog modal-dialog modal-xl">
+        <!-- Modal content-->
+        <div class="modal-content" style="background-color: rgba(179, 232, 225, 0.2);">
+          <div class="modal-header">
+            <button type="button" class="close"
+              style="font-size:24px;color:red;background-color: Transparent;outline:none;" data-dismiss="modal"><i
+                class='fas fa-times-circle'></i></button>
+            <h4 class="modal-title">RSVP Chat</h4>
+          </div>
+          <div class="modal-body">
+            <div class="list-group list-group-flush bg-transparent">
+              <label for="personName" class="btn-transparent">&nbsp;Name:</label>
+              <input name="personName" class="btn-transparent" id="personName" type="text" label="Name: " value=""
+                size=20 />
+              <label for="chatID" class="btn-transparent">&nbsp;Chat ID:</label>
+              <input name="chatID" class="btn-transparent" id="chatID" type="text" value="" size=20 />
+              <button class=" btn btn-primary" onclick="joinRoom();" data-dismiss="modal"
+                style="background-color: rgba(00, 123, 255, 0.2);">&nbsp;&nbsp;Join</button>
+
+              <!-- <label for="audioSource">Audio:</label><select id="audioSource"></select>
+                  <label for="videoSource">Video:</label><select id="videoSource"></select> -->
+              <!-- <button class="btn btn-primary" onclick="sendStream();">Send AV</button>
+                  <button class="btn btn-primary" onclick="stopAVI();">Stop AV</button>
+                  <button class="btn btn-primary" onclick="muteMe();" id="mute" disabled>Mute</button> -->
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="close"
+              style="font-size:24px;color:red;background-color: Transparent;outline:none;" data-dismiss="modal"><i
+                class='fas fa-times-circle'></i></button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="modal" id="myModal2" role="dialog">
+      <div class="modal-dialog modal-dialog modal-xl">
+        <!-- Modal content-->
+        <div class="modal-content" style="background-color: rgba(179, 232, 225, 0.2);">
+          <div class="modal-header">
+            <button type="button" class="close"
+              style="font-size:24px;color:red;background-color: Transparent;outline:none;" data-dismiss="modal"><i
+                class='fas fa-times-circle'></i></button>
+            <h4 class="modal-title">RSVP Chat</h4>
+          </div>
+          <div class="modal-body">
+            <div id="chatMessages" style="height: 50vh; overflow-y: auto; border: 1px solid #333333; padding:0 10px;"
+              class="btn-transparent">
+            </div>
+            <textarea id="textMessage" data-emoji-picker="true" disabled class="btn-transparent"
+              style="background-color:rgba(00,00, 00, 0.3); color: #fff;"></textarea>
+            <div class="image-upload">
+              <label for="file-input">
+                <i class="fas fa-image" style="font-size:48px;color:black;" alt="Upload Image" title="Upload Image"></i>
+              </label>
+
+              <input id="file-input" type="file" onchange="openImage(event);" accept="image/*" />
+              <img id='uploadImage' style=" display: none;" />
+              <button style='display: none;' onclick="cancelImage();" id="cancel"><i
+                  class='fas fa-times-circle'></i></button>
+              <button class="btn btn-primary" id="sendMessage" onclick="sendMessage()" disabled
+                style="background-color: rgba(00, 123, 255, 0.2);">Send</button>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="close"
+              style="font-size:24px;color:red;background-color: Transparent;outline:none;" data-dismiss="modal"><i
+                class='fas fa-times-circle'></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-8 board" id="board">
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/Joker.jpg" width="95" height="141" id="0_0_Joker">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/TS.jpg" width="95" height="141" id="1_0_TS" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/QS.jpg" width="95" height="141" id="2_0_QS" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/KS.jpg" width="95" height="141" id="3_0_KS" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/AS.jpg" width="95" height="141" id="4_0_AS" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/2D.jpg" width="95" height="141" id="5_0_2D" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/3D.jpg" width="95" height="141" id="6_0_3D" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/4D.jpg" width="95" height="141" id="7_0_4D" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/5D.jpg" width="95" height="141" id="8_0_5D" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/Joker.jpg" width="95" height="141" id="9_0_Joker">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/9S.jpg" width="95" height="141" id="0_1_9S" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/TH.jpg" width="95" height="141" id="1_1_TH" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/9H.jpg" width="95" height="141" id="2_1_9H" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/8H.jpg" width="95" height="141" id="3_1_8H" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/7H.jpg" width="95" height="141" id="4_1_7H" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/6H.jpg" width="95" height="141" id="5_1_6H" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/5H.jpg" width="95" height="141" id="6_1_5H" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/4H.jpg" width="95" height="141" id="7_1_4H" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/3H.jpg" width="95" height="141" id="8_1_3H" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/6D.jpg" width="95" height="141" id="9_1_6D" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/8S.jpg" width="95" height="141" id="0_2_8S" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/QH.jpg" width="95" height="141" id="1_2_QH" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/7D.jpg" width="95" height="141" id="2_2_7D" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/8D.jpg" width="95" height="141" id="3_2_8D" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/9D.jpg" width="95" height="141" id="4_2_9D" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/TD.jpg" width="95" height="141" id="5_2_TD" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/QD.jpg" width="95" height="141" id="6_2_QD" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/KD.jpg" width="95" height="141" id="7_2_KD" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/2H.jpg" width="95" height="141" id="8_2_2H" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/7D.jpg" width="95" height="141" id="9_2_7D" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/7S.jpg" width="95" height="141" id="0_3_7S" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/KH.jpg" width="95" height="141" id="1_3_KH" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/6D.jpg" width="95" height="141" id="2_3_6D" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/2C.jpg" width="95" height="141" id="3_3_2C" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/AH.jpg" width="95" height="141" id="4_3_AH" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/KH.jpg" width="95" height="141" id="5_3_KH" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/QH.jpg" width="95" height="141" id="6_3_QH" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/AD.jpg" width="95" height="141" id="7_3_AD" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/2S.jpg" width="95" height="141" id="8_3_2S" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/8D.jpg" width="95" height="141" id="9_3_8D" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/6S.jpg" width="95" height="141" id="0_4_6S" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/AH.jpg" width="95" height="141" id="1_4_AH" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/5D.jpg" width="95" height="141" id="2_4_5D" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/3C.jpg" width="95" height="141" id="3_4_3C" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/4H.jpg" width="95" height="141" id="4_4_4H" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/3H.jpg" width="95" height="141" id="5_4_3H" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/TH.jpg" width="95" height="141" id="6_4_TH" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/AC.jpg" width="95" height="141" id="7_4_AC" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/3S.jpg" width="95" height="141" id="8_4_3S" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/9D.jpg" width="95" height="141" id="9_4_9D" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/5S.jpg" width="95" height="141" id="0_5_5S" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/2C.jpg" width="95" height="141" id="1_5_2C" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/4D.jpg" width="95" height="141" id="2_5_4D" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/4C.jpg" width="95" height="141" id="3_5_4C" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/5H.jpg" width="95" height="141" id="4_5_5H" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/2H.jpg" width="95" height="141" id="5_5_2H" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/9H.jpg" width="95" height="141" id="6_5_9H" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/KC.jpg" width="95" height="141" id="7_5_KC" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/4S.jpg" width="95" height="141" id="8_5_4S" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/TD.jpg" width="95" height="141" id="9_5_TD" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/4S.jpg" width="95" height="141" id="0_6_4S" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/3C.jpg" width="95" height="141" id="1_6_3C" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/3D.jpg" width="95" height="141" id="2_6_3D" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/5C.jpg" width="95" height="141" id="3_6_5C" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/6H.jpg" width="95" height="141" id="4_6_6H" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/7H.jpg" width="95" height="141" id="5_6_7H" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/8H.jpg" width="95" height="141" id="6_6_8H" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/QC.jpg" width="95" height="141" id="7_6_QC" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/5S.jpg" width="95" height="141" id="8_6_5S" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/QD.jpg" width="95" height="141" id="9_6_QD" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/3S.jpg" width="95" height="141" id="0_7_3S" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/4C.jpg" width="95" height="141" id="1_7_4C" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/2D.jpg" width="95" height="141" id="2_7_2D" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/6C.jpg" width="95" height="141" id="3_7_6C" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/7C.jpg" width="95" height="141" id="4_7_7C" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/8C.jpg" width="95" height="141" id="5_7_8C" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/9C.jpg" width="95" height="141" id="6_7_9C" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/TC.jpg" width="95" height="141" id="7_7_TC" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/6S.jpg" width="95" height="141" id="8_7_6S" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/KD.jpg" width="95" height="141" id="9_7_KD" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/2S.jpg" width="95" height="141" id="0_8_2S" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/5C.jpg" width="95" height="141" id="1_8_5C" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/AS.jpg" width="95" height="141" id="2_8_AS" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/KS.jpg" width="95" height="141" id="3_8_KS" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/QS.jpg" width="95" height="141" id="4_8_QS" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/TS.jpg" width="95" height="141" id="5_8_TS" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/9S.jpg" width="95" height="141" id="6_8_9S" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/8S.jpg" width="95" height="141" id="7_8_8S" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/7S.jpg" width="95" height="141" id="8_8_7S" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/AD.jpg" width="95" height="141" id="9_8_AD" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/Joker.jpg" width="95" height="141" id="0_9_Joker">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/6C.jpg" width="95" height="141" id="1_9_6C" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/7C.jpg" width="95" height="141" id="2_9_7C" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/8C.jpg" width="95" height="141" id="3_9_8C" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/9C.jpg" width="95" height="141" id="4_9_9C" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/TC.jpg" width="95" height="141" id="5_9_TC" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/QC.jpg" width="95" height="141" id="6_9_QC" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/KC.jpg" width="95" height="141" id="7_9_KC" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/AC.jpg" width="95" height="141" id="8_9_AC" class="free"
+            onclick="imageClicked(this.id)">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+        <div class="xyz">
+          <img src="/static/images/FrontDeck/Joker.jpg" width="95" height="141" id="9_9_Joker">
+          <div class="overlay">
+            <i class="fa fa-user"></i>
+          </div>
+        </div>
+      </div>
+      <div class="col-2 deck">
+        <div id="myCards">
+        </div>
+      </div>
+      <div class="col-2">
+        <button type=" button" class="btn btn-info btn-lg" onclick="startGame();"
+          style="background-color: rgba(79, 132, 125, 0.8);">Sart Game</button>
+        <div><label for="personName" class="btn btn-info btn-lg"
+            style="color: white;">&nbsp;&nbsp;&nbsp;Players&nbsp;&nbsp;&nbsp;</label></div>
+        <div id="peopleInChat" class="btn-transparent" style="background-color: rgba(79, 132, 125, 0.8);"></div>
+      </div>
+    </div>
+
+  </div>
+  </div>
+
+  <!-- Bootstrap core JavaScript -->
+  <script src={{ static_url("vendor/bootstrap/js/bootstrap.js") }}></script>
+  <!-- Menu Toggle Script -->
+  <script src={{ static_url("js/emojiPicker.js") }}></script>
+  <script>
+    (() => {
+      new EmojiPicker();
+    })()
+    $("#textMessage").keypress(function (e) {
+      if (e.which == 13 && !e.shiftKey) {
+        sendMessage();
+        e.preventDefault();
+      }
+    });
+    $(window).on('load', function () {
+      $('#myModal1').modal('show');
+    });    
+  </script>
+</body>
+
+</html>
