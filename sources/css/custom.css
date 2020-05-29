@@ -143,5 +143,6 @@ video {
 .deck div { display:block; 
   border:1px solid #ffffff;
   height: 68vh; 
-  width: 5vw;
+  width: 12vw;
+  /* overflow: scroll; */
 } /* To remove the scrollbars */

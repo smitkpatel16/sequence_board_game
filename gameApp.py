@@ -9,7 +9,7 @@ import tornado.websocket
 from itertools import cycle
 
 logger = logging.getLogger(__name__)
-TEAMNAMES = ['#0000ff', '##00ff00', '#ff0000']
+TEAMNAMES = ['#0000ff', '#00ff00', '#ff0000']
 DECKOFCARDS = ['TC', 'TD', 'TH', 'TS', '2C', '2D', '2H', '2S', '3C',
                '3D', '3H', '3S', '4C', '4D', '4H', '4S', '5C', '5D', '5H',
                '5S', '6C', '6D', '6H', '6S', '7C', '7D', '7H', '7S', '8C',
@@ -87,26 +87,23 @@ class GameSocket(tornado.websocket.WebSocketHandler):
         self._cards = []
         self._team = None
         self._turn = False
-        logger.info(self._ROOMCONNECTIONS)
 
     def on_message(self, message):
         data = json.loads(message)
         if data.get('joinRoom'):
             if data.get('joinRoom') in self._ROOMCONNECTIONS:
-                if len(self._ROOMCONNECTIONS[data.get('joinRoom')]['members']) < 12:
-                    self._ROOMCONNECTIONS[data.get(
-                        'joinRoom')]['members'].append(self)
+                gameRoom = self._ROOMCONNECTIONS[data.get('joinRoom')]
+                if len(gameRoom['members']) < 12 and not gameRoom['game'] and self not in gameRoom['members']:
+                    gameRoom['members'].append(self)
             else:
                 self._ROOMCONNECTIONS[data.get('joinRoom')] = {}
-                self._ROOMCONNECTIONS[data.get('joinRoom')]['members'] = [self]
-                self._ROOMCONNECTIONS[data.get(
-                    'joinRoom')]['deck'] = DECKOFCARDS[:]
-                random.shuffle(
-                    self._ROOMCONNECTIONS[data.get('joinRoom')]['deck'])
-                self._ROOMCONNECTIONS[data.get('joinRoom')]['game'] = False
-            if len(self._ROOMCONNECTIONS[data.get('joinRoom')]['members']) == 1:
-                self._master = True
-                self._ROOMCONNECTIONS[data.get('joinRoom')]['game'] = False
+                gameRoom = self._ROOMCONNECTIONS[data.get('joinRoom')]
+                gameRoom['members'] = [self]
+            gameRoom['deck'] = DECKOFCARDS[:]
+            random.shuffle(gameRoom['deck'])
+            gameRoom['game'] = False
+            if not any([member._master for member in gameRoom['members']]):
+                gameRoom['members'][0]._master = True
             if not self._name:
                 self._name = data.get('personName')
             if not self._id:
@@ -115,7 +112,7 @@ class GameSocket(tornado.websocket.WebSocketHandler):
                                                            data.get('joinRoom')))
             count = len(self._ROOMCONNECTIONS[data.get('joinRoom')]['members'])
             people = [
-                c._name for c in self._ROOMCONNECTIONS[data.get('joinRoom')]['members']]
+                c._name+'_'+c._id for c in self._ROOMCONNECTIONS[data.get('joinRoom')]['members']]
             # peers = [
             #     c._id for c in self._ROOMCONNECTIONS[data.get('joinChat')]]
             for connection in self._ROOMCONNECTIONS[data.get('joinRoom')]['members']:
@@ -128,14 +125,14 @@ class GameSocket(tornado.websocket.WebSocketHandler):
         else:
             # this is imperative without this we do not know which room to control
             gameID = data.get('gameID')
+            gameRoom = self._ROOMCONNECTIONS[gameID]
             if gameID:
-                count = len(
-                    self._ROOMCONNECTIONS[gameID]['members'])
+                count = len(gameRoom['members'])
                 cards, teams = getCardsAndTeams(count)
                 if data.get("messageType") == "text":
                     logger.info("{} messaged the {} chatroom".format(self._name,
                                                                      gameID))
-                    for connection in self._ROOMCONNECTIONS[gameID]['members']:
+                    for connection in gameRoom['members']:
                         connection.write_message({'count': count,
                                                   'messagePersonName': self._name,
                                                   'messageType':
@@ -146,18 +143,22 @@ class GameSocket(tornado.websocket.WebSocketHandler):
                                                   data.get('image')
                                                   })
                 if data.get('messageType') == 'start':
-                    if self._master and not self._ROOMCONNECTIONS[gameID]['game'] and cards:
-                        self._ROOMCONNECTIONS[gameID]['game'] = True
+                    if self._master and not gameRoom['game'] and cards:
+                        gameRoom['game'] = True
                         self._turn = True
-                        for i, connection in enumerate(self._ROOMCONNECTIONS[gameID]['members']):
+                        for i, connection in enumerate(gameRoom['members'], start=1):
                             for c in range(cards):
                                 connection._cards.append(
-                                    self._ROOMCONNECTIONS[gameID]['deck'].pop())
+                                    gameRoom['deck'].pop())
                             connection._team = TEAMNAMES[i % teams]
                             connection.write_message({'messageType': 'start',
                                                       'cards': connection._cards,
                                                       'teams': teams,
                                                       'teamName': connection._team})
+                            connection.write_message({'messageType': 'turn',
+                                                      'memberid': self._id,
+                                                      'teamName': self._team+'90'})
+
                 if data.get('messageType') == "occupy" and self._turn:
                     card = data.get("card")
                     if card in self._cards:
@@ -167,21 +168,13 @@ class GameSocket(tornado.websocket.WebSocketHandler):
                     elif "JD" in self._cards:
                         self._cards.remove("JD")
                     cardID = data.get("x")+'_'+data.get("y")+"_"+card
-                    newCard = self._ROOMCONNECTIONS[gameID]['deck'].pop()
+                    newCard = gameRoom['deck'].pop()
                     self._cards.append(newCard)
-                    for connection in self._ROOMCONNECTIONS[gameID]['members']:
+                    for connection in gameRoom['members']:
                         connection.write_message({'messageType': 'occupy',
                                                   'cardID': cardID,
                                                   'teamName': self._team})
-                    pool = cycle(self._ROOMCONNECTIONS[gameID]['members'])
-                    for member in pool:
-                        if member._turn:
-                            member._turn = False
-                            break
-                    member = next(pool)
-                    member._turn = True
-                    self.write_message({"messageType": 'newCard',
-                                        "cards": self._cards})
+                    self._nextMemberTurn(gameID)
                 if data.get('messageType') == "free" and self._turn:
                     card = data.get("card")
                     if "JH" in self._cards:
@@ -189,21 +182,37 @@ class GameSocket(tornado.websocket.WebSocketHandler):
                     elif "JS" in self._cards:
                         self._cards.remove("JS")
                     cardID = data.get("x")+'_'+data.get("y")+"_"+card
-                    newCard = self._ROOMCONNECTIONS[gameID]['deck'].pop()
+                    newCard = gameRoom['deck'].pop()
                     self._cards.append(newCard)
-                    for connection in self._ROOMCONNECTIONS[gameID]['members']:
+                    for connection in gameRoom['members']:
                         connection.write_message({'messageType': 'free',
                                                   'cardID': cardID,
                                                   'teamName': self._team})
-                    pool = cycle(self._ROOMCONNECTIONS[gameID]['members'])
-                    for member in pool:
-                        if member._turn:
-                            member._turn = False
-                            break
-                    member = next(pool)
-                    member._turn = True
-                    self.write_message({"messageType": 'newCard',
-                                        "cards": self._cards})
+                    self._nextMemberTurn(gameID)
+# |-----------------------------------------------------------------------------|
+# _nextMemberTurn :-
+# |-----------------------------------------------------------------------------|
+
+    def _nextMemberTurn(self, gameID):
+        pool = cycle(self._ROOMCONNECTIONS[gameID]['members'])
+        for member in pool:
+            if member._turn:
+                member._turn = False
+                break
+        member = next(pool)
+        member._turn = True
+        turnID = member._id
+        teamName = member._team+'90'
+        logger.info("{} cards in the deck".format(
+            len(self._ROOMCONNECTIONS[gameID]['deck'])))
+        self.write_message({"messageType": 'newCard',
+                            "cards": self._cards})
+        for member in self._ROOMCONNECTIONS[gameID]['members']:
+            member.write_message({'messageType': 'turn',
+                                  'memberid': turnID,
+                                  'teamName': teamName})
+
+# |--------------------------End of _nextMemberTurn--------------------------------|
 
     def on_close(self):
         for chatID, connectionBlock in self._ROOMCONNECTIONS.items():
@@ -214,7 +223,7 @@ class GameSocket(tornado.websocket.WebSocketHandler):
                     self._name, chatID))
                 count = len(self._ROOMCONNECTIONS[chatID]['members'])
                 people = [
-                    c._name for c in self._ROOMCONNECTIONS[chatID]['members']]
+                    c._name+'_'+c._id for c in self._ROOMCONNECTIONS[chatID]['members']]
                 for connection in self._ROOMCONNECTIONS[chatID]['members']:
                     connection.write_message({'peerId': self._id,
                                               'messageType': 'remove',

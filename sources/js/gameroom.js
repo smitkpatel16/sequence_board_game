@@ -1,4 +1,5 @@
 "use strict";
+/* Global Variables */
 var gameSocket = null;
 var chatId = null;
 var personName = null;
@@ -8,6 +9,11 @@ var master = false;
 var teamName = null;
 var images = [];
 var myCards = [];
+var occupiedList = {
+  '#0000ff90': [],
+  '#00ff0090': [],
+  '#ff000090': []
+}
 var board = [["Joker", "TS", "QS", "KS", "AS", "2D", "3D", "4D", "5D", "Joker"],
 ["9S", "TH", "9H", "8H", "7H", "6H", "5H", "4H", "3H", "6D"],
 ["8S", "QH", "7D", "8D", "9D", "TD", "QD", "KD", "2H", "7D"],
@@ -37,26 +43,38 @@ var cardmap = {
   C: "Club",
   D: "Diamond"
 }
-
+/* 
+===============================================================================
+ addImageProcess - adds the image and waits for it to load
+=============================================================================== 
+*/
 function addImageProcess(src) {
   return new Promise((resolve, reject) => {
-    let img = new Image()
-    img.onload = () => resolve(img)
-    img.onerror = reject
-    img.src = src
-  })
+    let img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
 }
-
+/* 
+===============================================================================
+ startGame - the master (first one in the room) can start the game
+=============================================================================== 
+*/
 function startGame() {
   if (gameSocket) {
-    var obj = {}
+    var obj = {};
     obj['gameID'] = chatId;
     obj['messageType'] = 'start';
     gameSocket.send(JSON.stringify(obj));
   }
 }
-
-function fix_dpi(id) {
+/* 
+===============================================================================
+ fixDPI - dpi and canvas are generally a mismatch showing blurred images
+=============================================================================== 
+*/
+function fixDPI(id) {
   var canvas = document.getElementById(id);
   var dpi = window.devicePixelRatio;
   //create a style object that returns width and height
@@ -72,59 +90,36 @@ function fix_dpi(id) {
   canvas.setAttribute('width', style.width() * dpi);
   canvas.setAttribute('height', style.height() * dpi);
 }
-
-
-function drawCircle(e) {
-  var can = document.getElementById("board");
-  var canctx = can.getContext("2d");
-
-  var pos = getCursorPosition(can, e);
-  var clickX = pos.x;
-  var clickY = pos.y;
-
-  canctx.fillStyle = "#2980b9";
-  canctx.beginPath();
-  canctx.arc(clickX, clickY, 10, 0, 2 * Math.PI);
-  canctx.fill();
-
-  console.log(clickX, clickY);
-  console.log("drawcircle");
-}
-function getCursorPosition(canvas, e) {
-  // Gets click position
-  var rect = canvas.getBoundingClientRect();
-
-  console.log('getcursorpos');
-
-  return {
-    x: e.clientX - rect.left,
-    y: e.clientY - rect.top
-  };
-}
-
+/* 
+===============================================================================
+ getChatID - take chatID if present in URL
+=============================================================================== 
+*/
 async function getChatID() {
   var url_string = window.location.href;
   var u = new URL(url_string);
   var el = document.getElementById("chatID");
   el.value = u.searchParams.get("id");
   var boardDiv = document.getElementById("board");
-  // var ctx = c.getContext("2d");
-  // ctx.imageSmoothingEnabled = false;
-  // fix_dpi("board");
-  // fix_dpi("myCards");
+  //sort and arrange the board (this is just added here to do it always on page load)
   for (var i = 0; i < 10; i++) {
     for (var j = 0; j < 10; j++) {
       var imgElement = document.getElementById(j.toString() + "_" + i.toString() + "_" + board[i][j]);
       var parentE = imgElement.parentElement;
-      parentE.setAttribute("style", "width:" + Math.floor(boardDiv.clientWidth / 10.5).toString() + "px;height:" + (boardDiv.clientHeight / 10.5).toString() + "px;");
-      imgElement.className = "free"
-      parentE.id = j.toString() + "_" + i.toString() + "_" + board[i][j] + '_div'
-      parentE.setAttribute("onclick", "imageClicked(this.id);")
+      parentE.setAttribute("style", "width:" + Math.floor(boardDiv.clientWidth / 10).toString() + "px;height:" + (boardDiv.clientHeight / 10).toString() + "px;");
+      imgElement.className = "free";
+      parentE.id = j.toString() + "_" + i.toString() + "_" + board[i][j] + '_div';
+      parentE.setAttribute("onclick", "imageClicked(this.id);");
     }
   }
 }
+/* 
+===============================================================================
+ occupyCard - occupy a card for a members turn
+=============================================================================== 
+*/
 function occupyCard(x, y, card, imgID) {
-  var obj = {}
+  var obj = {};
   obj.x = imgID.split("_")[0];
   obj.y = imgID.split("_")[1];
   obj.card = card;
@@ -133,8 +128,13 @@ function occupyCard(x, y, card, imgID) {
   obj.teamName = teamName;
   gameSocket.send(JSON.stringify(obj));
 }
+/* 
+===============================================================================
+ freeCard - free up an occupied card for a members turn
+=============================================================================== 
+*/
 function freeCard(x, y, card, imgID) {
-  var obj = {}
+  var obj = {};
   obj.x = imgID.split("_")[0];
   obj.y = imgID.split("_")[1];
   obj.card = card;
@@ -143,13 +143,18 @@ function freeCard(x, y, card, imgID) {
   obj.teamName = teamName;
   gameSocket.send(JSON.stringify(obj));
 }
+/* 
+===============================================================================
+ imageClicked - trigger appropriate action on image clicked on board
+=============================================================================== 
+*/
 function imageClicked(imgID) {
   // JC and JD are TWO EYED and JH and JS are ONE EYED
-  var iid = imgID.split("_")[0] + "_" + imgID.split("_")[1] + "_" + imgID.split("_")[2]
+  var iid = imgID.split("_")[0] + "_" + imgID.split("_")[1] + "_" + imgID.split("_")[2];
   var imgTag = document.getElementById(iid);
   var card = imgID.split("_")[2];
   if (imgTag.className == "free") {
-    var c = confirm("Would you like to occupy " + cardmap[card.charAt(0)] + " of " + cardmap[card.charAt(1)] + " ?")
+    var c = confirm("Would you like to occupy " + cardmap[card.charAt(0)] + " of " + cardmap[card.charAt(1)] + " ?");
     if (c) {
       if (myCards.indexOf(card) >= 0) {
         occupyCard(imgID.split("_")[0], imgID.split("_")[1], card, iid);
@@ -163,31 +168,20 @@ function imageClicked(imgID) {
     }
   }
   if (imgTag.className == "occupied") {
-    var c = confirm("Would you like to free " + cardmap[card.charAt(0)] + " of " + cardmap[card.charAt(1)] + " ?")
+    var c = confirm("Would you like to free " + cardmap[card.charAt(0)] + " of " + cardmap[card.charAt(1)] + " ?");
     if (myCards.indexOf("JH") >= 0 || myCards.indexOf("JS") >= 0) {
       freeCard(imgID.split("_")[0], imgID.split("_")[1], card, iid);
     }
     else {
       alert("You have no suitable card to pick from your deck");
     }
-
-  }
-
-}
-
-
-function chatCollapse() {
-  showStyle = "height: 50vh; overflow-y: scroll; border: 1px solid #333333;"
-  var txtBlock = document.getElementById("chatMessages");
-  if (txtBlock.style['cssText'] === "display: none;") {
-    txtBlock.style = showStyle;
-  }
-  else {
-
-    txtBlock.style = "display: none;";
-
   }
 }
+/* 
+===============================================================================
+ joinRoom - join a play room
+=============================================================================== 
+*/
 function joinRoom() {
   var el = document.getElementById("chatID");
   chatId = el.value;
@@ -197,8 +191,14 @@ function joinRoom() {
     if (gameSocket) {
       gameSocket.close();
     }
+    var wsURL = null;
     window.history.pushState("", "", location.protocol + '//' + location.host + location.pathname + "?id=" + chatId);
-    var wsURL = "ws://" + window.location.host + "/gamesocket";
+    // if (location.protocol == 'http') {
+    // wsURL = "ws://" + window.location.host + "/gamesocket";
+    // }
+    // else {
+    wsURL = "ws://" + window.location.host + "/gamesocket";
+    // }
     // console.log(window.location.host);
     gameSocket = new WebSocket(wsURL);
     gameSocket.onopen = function (evt) { onOpen(evt) };
@@ -220,10 +220,13 @@ function joinRoom() {
         }
       }
     }
-
   }
 }
-
+/* 
+===============================================================================
+ sendMessage - send a chat message to the play room
+=============================================================================== 
+*/
 function sendMessage() {
   var el = document.getElementById("textMessage");
   if (el.value.trim() || image) {
@@ -241,6 +244,11 @@ function sendMessage() {
     alert("Please enter a message");
   }
 }
+/* 
+===============================================================================
+ onOpen - join socket
+=============================================================================== 
+*/
 function onOpen(evt) {
   var el = document.getElementById("textMessage");
   el.removeAttribute("disabled");
@@ -248,10 +256,14 @@ function onOpen(evt) {
   el.removeAttribute("disabled");
   var obj = {};
   obj['joinRoom'] = chatId;
-  obj['personName'] = personName
+  obj['personName'] = personName;
   gameSocket.send(JSON.stringify(obj));
 }
-
+/* 
+===============================================================================
+ updateUnreadCount - when a new chat message arrives
+=============================================================================== 
+*/
 function updateUnreadCount() {
   var str = document.getElementById("myModal2");
   if (!str.className.includes("show")) {
@@ -261,21 +273,44 @@ function updateUnreadCount() {
     badge.innerHTML = badgeCount;
   }
 }
+/* 
+===============================================================================
+ removeUnreadCount - when a chat window opens
+=============================================================================== 
+*/
 function removeUnreadCount() {
   var badge = document.getElementById("badge");
   badge.innerHTML = 0;
 }
-
-
+/* 
+===============================================================================
+ onMessage - when message is received from socket
+=============================================================================== 
+*/
 function onMessage(evt) {
   handleConference(evt.data).then(value => { console.log(value) });
 }
+/* 
+===============================================================================
+ onError - when error from socket
+=============================================================================== 
+*/
 function onError(evt) {
   console.log(evt);
 }
+/* 
+===============================================================================
+ onClose - log when socket is closed
+=============================================================================== 
+*/
 function onClose(evt) {
   console.log("Chat Closed");
 }
+/* 
+===============================================================================
+ cancelImage - cancel sending an image in chat
+=============================================================================== 
+*/
 function cancelImage() {
   var output = document.getElementById('uploadImage');
   var cancel = document.getElementById('cancel');
@@ -285,6 +320,11 @@ function cancelImage() {
   cancel.style = "display: none;"
 
 }
+/* 
+===============================================================================
+ openImage - attach an image
+=============================================================================== 
+*/
 var openImage = function (file) {
   var input = file.target;
 
@@ -300,7 +340,12 @@ var openImage = function (file) {
     cancel.style = "font-size:24px;color:red;background-color: Transparent;outline:none;"
   };
   reader.readAsDataURL(input.files[0]);
-};
+}
+/* 
+===============================================================================
+ handleConference all socket messages arrive here
+=============================================================================== 
+*/
 async function handleConference(messageStream) {
   var dataObj = JSON.parse(messageStream);
   if (dataObj['messageType'] == 'text') {
@@ -326,6 +371,7 @@ async function handleConference(messageStream) {
     txtBlock.scrollTop = txtBlock.scrollHeight;
     updateUnreadCount();
   }
+  //new person joins the game
   if (dataObj['messageType'] == 'init') {
     var el = document.getElementById("peopleInChat");
     while (el.firstChild) {
@@ -333,24 +379,40 @@ async function handleConference(messageStream) {
     }
     for (var person of dataObj['people']) {
       var div = document.createElement("div");
-      div.innerHTML = person;
+      div.innerHTML = person.split("_")[0];
+      div.id = person.split("_")[1];
       el.appendChild(div);
     }
     personID = dataObj['id'];
   }
-  if (dataObj['messageType'] == 'remove') {
-    if (dataObj['peerId'] in peers) {
-      var el = document.getElementById("peopleInChat");
-      while (el.firstChild) {
-        el.removeChild(el.lastChild)
+  //whose turn is it
+  if (dataObj['messageType'] == 'turn') {
+    var el = document.getElementById("peopleInChat");
+    for (var i = 0; i < el.children.length; i++) {
+      if (el.children[i].id == dataObj['memberid']) {
+        console.log(el.children[i]);
+        el.children[i].setAttribute("style", "background-color: " + dataObj['teamName'] + ";")
       }
-      for (var person of dataObj['people']) {
-        var div = document.createElement("div");
-        div.innerHTML = person;
-        el.appendChild(div);
+      else {
+        el.children[i].removeAttribute("style")
       }
     }
   }
+  //a member got removed
+  if (dataObj['messageType'] == 'remove') {
+    var el = document.getElementById("peopleInChat");
+    while (el.firstChild) {
+      el.removeChild(el.lastChild)
+    }
+    for (var person of dataObj['people']) {
+      var div = document.createElement("div");
+      div.innerHTML = person.split("_")[0];
+      div.id = person.split("_")[1];
+      el.appendChild(div);
+    }
+    resetBoard();
+  }
+  // start the game play
   if (dataObj['messageType'] == 'start') {
     var cardDiv = document.getElementById("myCards");
     // var c = document.getElementById("myCards");
@@ -361,18 +423,21 @@ async function handleConference(messageStream) {
     teamName = dataObj["teamName"];
 
   }
+  // occupy a card
   if (dataObj['messageType'] == 'occupy') {
     var imgTag = document.getElementById(dataObj["cardID"]);
     imgTag.className = "occupied";
     imgTag.parentElement.children[1].className = "overlayshow";
     imgTag.parentElement.children[1].style.background = dataObj["teamName"];
   }
+  // free up an occupied card
   if (dataObj['messageType'] == 'free') {
     var imgTag = document.getElementById(dataObj["cardID"]);
     imgTag.className = "free";
     imgTag.parentElement.children[1].className = "overlay";
     imgTag.parentElement.children[1].style.background = dataObj["teamName"];
   }
+  // new card for the current playing member
   if (dataObj['messageType'] == 'newCard') {
     var cardDiv = document.getElementById("myCards");
     while (cardDiv.firstChild) {
@@ -380,25 +445,44 @@ async function handleConference(messageStream) {
     }
     await fillCards(dataObj["cards"], cardDiv);
   }
-
   return "Done";
 }
+/* 
+===============================================================================
+ resetBoard reset the playing board to be blank
+=============================================================================== 
+*/
+function resetBoard() {
+  var boardDiv = document.getElementById("board");
+  var d = null;
+  for (var i = 0; i < boardDiv.children.length; i++) {
+    if (boardDiv.children[i].children[0]) {
+      boardDiv.children[i].children[0].className = 'free';
+      boardDiv.children[i].children[1].className = 'overlay';
+    }
+  }
+}
+/* 
+===============================================================================
+ fillCards new cards for the player
+=============================================================================== 
+*/
 async function fillCards(cards, cardDiv) {
   myCards = [];
   for (var i = 0; i < cards.length; i++) {
     myCards.push(cards[i]);
     var img = await addImageProcess("/static/images/FrontDeck/" + cards[i] + ".jpg");
-    img.width = cardDiv.clientWidth;
-    img.height = cardDiv.clientWidth * 1.52;
+    img.width = cardDiv.clientWidth / 2;
+    img.height = cardDiv.clientWidth * 0.76;
     cardDiv.append(img);
   }
 }
+
 function closeChat() {
   gameSocket.close();
 }
 function fail() {
   console.log("Failed");
 }
-
 
 window.addEventListener("load", getChatID, false);
