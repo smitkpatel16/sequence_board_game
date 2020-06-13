@@ -4,6 +4,8 @@ var gameSocket = null;
 var chatId = null;
 var personName = null;
 var personID = null;
+var vph = null;
+var vpw = null;
 var image = null;
 var master = false;
 var teamName = null;
@@ -100,17 +102,61 @@ async function getChatID() {
   var u = new URL(url_string);
   var el = document.getElementById("chatID");
   el.value = u.searchParams.get("id");
+  await sortBoard();
+}
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+async function sortBoard() {
+
+  var orientation = window.screen.orientation || window.orientation;
+  var orntn = null;
+  if (orientation === "landscape-primary" || orientation === "landspace" || orientation === "landscape-secondary") {
+    orntn = 'l';
+  } else if (orientation === "portrait-secondary" || orientation === "portrait-primary" || orientation === "portrait") {
+    orntn = 'p';
+  } else if (orientation === undefined) {
+    console.log("The orientation API isn't supported in this browser :(");
+  }
+  await sleep(1500);
+  var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+  var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+  vph = h;
+  vpw = w;
+  if (w / h > 1) {
+    orntn = 'l';
+  }
+  else {
+    orntn = 'p';
+  }
   var boardDiv = document.getElementById("board");
+  if (orntn && orntn == 'l') {
+    boardDiv.className = "col-12 board no-gutters"
+  }
+  else {
+    boardDiv.className = "col-12 board no-gutters"
+  }
+  await sleep(500);
   //sort and arrange the board (this is just added here to do it always on page load)
   for (var i = 0; i < 10; i++) {
     for (var j = 0; j < 10; j++) {
       var imgElement = document.getElementById(j.toString() + "_" + i.toString() + "_" + board[i][j]);
       var parentE = imgElement.parentElement;
-      parentE.setAttribute("style", "width:" + Math.floor(boardDiv.clientWidth / 10).toString() + "px;height:" + (boardDiv.clientHeight / 10).toString() + "px;");
+      if (orntn && orntn == 'l') {
+        parentE.setAttribute("style", "width:" + Math.floor(boardDiv.clientWidth / 10).toString() + "px;height:" + (boardDiv.clientHeight / 10).toString() + "px;");
+      }
+      else {
+        parentE.setAttribute("style", "width:" + Math.floor(boardDiv.clientWidth / 10).toString() + "px;height:" + (boardDiv.clientHeight / 10).toString() + "px;");
+      }
       imgElement.className = "free";
       parentE.id = j.toString() + "_" + i.toString() + "_" + board[i][j] + '_div';
       parentE.setAttribute("onclick", "imageClicked(this.id);");
     }
+  }
+  if (myCards.length > 0) {
+    var cardDiv = document.getElementById("myCards");
+    // slice to pass by value
+    await fillCards(myCards.slice(), cardDiv);
   }
 }
 /* 
@@ -410,7 +456,7 @@ async function handleConference(messageStream) {
       div.id = person.split("_")[1];
       el.appendChild(div);
     }
-    resetBoard();
+    await resetBoard();
   }
   // start the game play
   if (dataObj['messageType'] == 'start') {
@@ -429,6 +475,14 @@ async function handleConference(messageStream) {
     imgTag.className = "occupied";
     imgTag.parentElement.children[1].className = "overlayshow";
     imgTag.parentElement.children[1].style.background = dataObj["teamName"];
+  }
+  if (dataObj['messageType'] == 'win') {
+    for (var i = 0; i < 5; i++) {
+      var imgTag = document.getElementById(dataObj["cardIDs"][i]);
+      imgTag.className = "occupied-win";
+      imgTag.parentElement.children[1].className = "overlayshowwin";
+      imgTag.parentElement.children[1].style.background = dataObj["teamName"];
+    }
   }
   // free up an occupied card
   if (dataObj['messageType'] == 'free') {
@@ -452,7 +506,7 @@ async function handleConference(messageStream) {
  resetBoard reset the playing board to be blank
 =============================================================================== 
 */
-function resetBoard() {
+async function resetBoard() {
   var boardDiv = document.getElementById("board");
   var d = null;
   for (var i = 0; i < boardDiv.children.length; i++) {
@@ -460,6 +514,10 @@ function resetBoard() {
       boardDiv.children[i].children[0].className = 'free';
       boardDiv.children[i].children[1].className = 'overlay';
     }
+  }
+  var cardDiv = document.getElementById("myCards");
+  while (cardDiv.firstChild) {
+    cardDiv.removeChild(cardDiv.lastChild);
   }
 }
 /* 
@@ -472,8 +530,8 @@ async function fillCards(cards, cardDiv) {
   for (var i = 0; i < cards.length; i++) {
     myCards.push(cards[i]);
     var img = await addImageProcess("/static/images/FrontDeck/" + cards[i] + ".jpg");
-    img.width = cardDiv.clientWidth / 2;
-    img.height = cardDiv.clientWidth * 0.76;
+    img.width = cardDiv.clientWidth / cards.length;
+    img.height = cardDiv.clientHeight;
     cardDiv.append(img);
   }
 }
@@ -486,3 +544,4 @@ function fail() {
 }
 
 window.addEventListener("load", getChatID, false);
+window.addEventListener("orientationchange", sortBoard, false);
