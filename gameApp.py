@@ -241,42 +241,61 @@ class GameSocket(tornado.websocket.WebSocketHandler):
             winner = None
             for i in range(10):
                 # for j in range(6):
-                dia = "".join([str(v) for v in tempGrid.diagonal(i-5)])
+                d = i-5
+                dia = "".join([str(v) for v in tempGrid.diagonal(d)])
                 dialr = "".join([str(v)
-                                 for v in np.fliplr(tempGrid).diagonal(i-5)])
+                                 for v in np.fliplr(tempGrid).diagonal(d)])
                 col = "".join([str(v) for v in tempGrid[i, :]])
                 row = "".join([str(v) for v in tempGrid[:, i]])
                 # print(dia, row, col)
                 if subStr in dia:
                     x = dia.index(subStr)
-                    # print("Dia ", i, x, dia)
-                    for j in range(x, x+5):
-                        gameRoom['occupied'][key].remove((i-5+j, j))
-                        winStreak.append((i-5+j, j))
+                    print("Dia ", d, x, dia)
+                    print(gameRoom['occupied'][key])
+                    if d >= 0:
+                        for j in range(x, x+5):
+                            gameRoom['occupied'][key].remove((j, d+j))
+                            winStreak.append((j, d+j))
+                            # print(j, d+j)
+                    else:
+                        for j in range(x, x+5):
+                            gameRoom['occupied'][key].remove((abs(d)+j, j))
+                            winStreak.append((abs(d)+j, j))
+                            # print(abs(d)+j, j)
                     winner = key
                 if subStr in dialr:
                     x = dialr.index(subStr)
-                    # print("DiaLR ", i, x, dialr)
-                    for j in range(x, x+5):
-                        gameRoom['occupied'][key].remove((j, 9-((i-5)+j)))
-                        winStreak.append((j, 9-((i-5)+j)))
+                    print("DiaLR ", d, x, dialr)
+                    print(gameRoom['occupied'][key])
+                    if d >= 0:
+                        for j in range(x-5, x):
+                            gameRoom['occupied'][key].remove((9-j, d+j))
+                            winStreak.append((9-j, d+j))
+                            # print(9-j, d+j)
+                    else:
+                        for j in range(x, x+5):
+                            gameRoom['occupied'][key].remove((9-abs(d)+j, j))
+                            winStreak.append((9-abs(d)+j, j))
+                            # print(9-abs(d)+j, j)
                     winner = key
                 if subStr in row:
                     x = row.index(subStr)
-                    # print("Row ", i, x, row)
+                    print("Row ", i, x, row)
+                    print(gameRoom['occupied'][key])
                     for j in range(x, x+5):
                         gameRoom['occupied'][key].remove((j, i))
                         winStreak.append((j, i))
                     winner = key
                 if subStr in col:
                     x = col.index(subStr)
-                    # print("Col ", i, x, col)
+                    print("Col ", i, x, col)
+                    print(gameRoom['occupied'][key])
                     for j in range(x, x+5):
                         gameRoom['occupied'][key].remove((i, j))
                         winStreak.append((i, j))
                     winner = key
         if winStreak:
-            winStreak = [str(win[0])+"_"+str(win[1])+"_"+BOARD[win[0]][win[1]]
+            winStreak = [str(win[0])+"_"+str(win[1])+"_"+BOARD[win[1]][win[0]]
                          for win in winStreak]
             for connection in gameRoom['members']:
                 connection.write_message({'messageType': 'win',
