@@ -487,7 +487,20 @@ async function handleConference(messageStream) {
         teamWin[dataObj["teamName"]] = 1;
       }
       else {
-        alert("Game Over");
+        var winnerteam = null;
+        switch (dataObj["teamName"]) {
+          case "#0000ff":
+            winnerteam = "Blue";
+            break;
+          case "#00ff00":
+            winnerteam = "Green";
+            break;
+          case "#ff0000":
+            winnerteam = "Read";
+            break;
+
+        }
+        alert("Game Over " + winnerteam + " wins");
       }
     }
   }
