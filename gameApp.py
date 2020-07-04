@@ -254,12 +254,14 @@ class GameSocket(tornado.websocket.WebSocketHandler):
                     print(gameRoom['occupied'][key])
                     if d >= 0:
                         for j in range(x, x+5):
-                            gameRoom['occupied'][key].remove((j, d+j))
+                            if (j, d+j) not in [(0, 0), (0, 9), (9, 0), (9, 9)]:
+                                gameRoom['occupied'][key].remove((j, d+j))
                             winStreak.append((j, d+j))
                             # print(j, d+j)
                     else:
                         for j in range(x, x+5):
-                            gameRoom['occupied'][key].remove((abs(d)+j, j))
+                            if (abs(d)+j, j) not in [(0, 0), (0, 9), (9, 0), (9, 9)]:
+                                gameRoom['occupied'][key].remove((abs(d)+j, j))
                             winStreak.append((abs(d)+j, j))
                             # print(abs(d)+j, j)
                     winner = key
@@ -269,12 +271,15 @@ class GameSocket(tornado.websocket.WebSocketHandler):
                     print(gameRoom['occupied'][key])
                     if d >= 0:
                         for j in range(x-5, x):
-                            gameRoom['occupied'][key].remove((9-j, d+j))
+                            if (9-j, d+j) not in [(0, 0), (0, 9), (9, 0), (9, 9)]:
+                                gameRoom['occupied'][key].remove((9-j, d+j))
                             winStreak.append((9-j, d+j))
                             # print(9-j, d+j)
                     else:
                         for j in range(x, x+5):
-                            gameRoom['occupied'][key].remove((9-abs(d)+j, j))
+                            if (9-abs(d)+j, j) not in [(0, 0), (0, 9), (9, 0), (9, 9)]:
+                                gameRoom['occupied'][key].remove(
+                                    (9-abs(d)+j, j))
                             winStreak.append((9-abs(d)+j, j))
                             # print(9-abs(d)+j, j)
                     winner = key
@@ -283,7 +288,8 @@ class GameSocket(tornado.websocket.WebSocketHandler):
                     print("Row ", i, x, row)
                     print(gameRoom['occupied'][key])
                     for j in range(x, x+5):
-                        gameRoom['occupied'][key].remove((j, i))
+                        if (j, i) not in [(0, 0), (0, 9), (9, 0), (9, 9)]:
+                            gameRoom['occupied'][key].remove((j, i))
                         winStreak.append((j, i))
                     winner = key
                 if subStr in col:
@@ -291,7 +297,8 @@ class GameSocket(tornado.websocket.WebSocketHandler):
                     print("Col ", i, x, col)
                     print(gameRoom['occupied'][key])
                     for j in range(x, x+5):
-                        gameRoom['occupied'][key].remove((i, j))
+                        if (i, j) not in [(0, 0), (0, 9), (9, 0), (9, 9)]:
+                            gameRoom['occupied'][key].remove((i, j))
                         winStreak.append((i, j))
                     winner = key
         if winStreak:

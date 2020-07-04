@@ -9,6 +9,7 @@ var vpw = null;
 var image = null;
 var master = false;
 var teamName = null;
+var teamWin = {}
 var images = [];
 var myCards = [];
 var occupiedList = {
@@ -482,6 +483,12 @@ async function handleConference(messageStream) {
       imgTag.className = "occupied-win";
       imgTag.parentElement.children[1].className = "overlayshowwin";
       imgTag.parentElement.children[1].style.background = dataObj["teamName"];
+      if (!(dataObj["teamName"] in teamWin)) {
+        teamWin[dataObj["teamName"]] = 1;
+      }
+      else {
+        alert("Game Over");
+      }
     }
   }
   // free up an occupied card
