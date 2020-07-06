@@ -122,6 +122,7 @@ class GameSocket(tornado.websocket.WebSocketHandler):
                 gameRoom = self._ROOMCONNECTIONS[data.get('joinRoom')]
                 gameRoom['members'] = [self]
                 gameRoom['occupied'] = {}
+                gameRoom['boardCards'] = []
                 gameRoom['game'] = False
             if not gameRoom['game']:
                 gameRoom['deck'] = DECKOFCARDS[:]
@@ -207,8 +208,12 @@ class GameSocket(tornado.websocket.WebSocketHandler):
         elif "JD" in self._cards:
             self._cards.remove("JD")
             gameRoom['deck'].append("JD")
+        gameRoom['boardCards'].append(card)
         cardID = data.get("x")+'_'+data.get("y")+"_"+card
         newCard = gameRoom['deck'].pop(0)
+        # dead card check
+        while gameRoom['boardCards'].count(newCard) == 2:
+            newCard = gameRoom['deck'].pop(0)
         self._cards.append(newCard)
         if self._team in gameRoom['occupied']:
             gameRoom['occupied'][self._team].append(
@@ -222,6 +227,34 @@ class GameSocket(tornado.websocket.WebSocketHandler):
                                       'teamName': self._team})
         self._monitorWins(gameRoom)
 # |---------------------------End of _occupyCard--------------------------------|
+
+#  |-----------------------------------------------------------------------------|
+# _freeUpCard :-
+# |-----------------------------------------------------------------------------|
+    def _freeUpCard(self, data, gameRoom):
+        card = data.get("card")
+        if "JH" in self._cards:
+            self._cards.remove("JH")
+            gameRoom['deck'].append("JH")
+        elif "JS" in self._cards:
+            self._cards.remove("JS")
+            gameRoom['deck'].append("JS")
+        cardID = data.get("x")+'_'+data.get("y")+"_"+card
+        frethis = (int(data.get("x")), int(data.get("y")))
+        for key, values in gameRoom['occupied'].items():
+            if frethis in values:
+                gameRoom['occupied'][key].remove(frethis)
+        gameRoom['boardCards'].remove(card)
+        newCard = gameRoom['deck'].pop(0)
+        # dead card check
+        while gameRoom['boardCards'].count(newCard) == 2:
+            newCard = gameRoom['deck'].pop(0)
+        self._cards.append(newCard)
+        for connection in gameRoom['members']:
+            connection.write_message({'messageType': 'free',
+                                      'cardID': cardID,
+                                      'teamName': self._team})
+# |--------------------------End of _freeUpCard---------------------------------|
 
 # |-----------------------------------------------------------------------------|
 # _monitorWins :-
@@ -272,7 +305,8 @@ class GameSocket(tornado.websocket.WebSocketHandler):
                     if d >= 0:
                         for j in range(x-5, x):
                             if (9-j, d+j) not in [(0, 0), (0, 9), (9, 0), (9, 9)]:
-                                gameRoom['occupied'][key].remove((9-j, d+j))
+                                gameRoom['occupied'][key].remove(
+                                    (9-abs(d)+j, d+j))
                             winStreak.append((9-j, d+j))
                             # print(9-j, d+j)
                     else:
@@ -311,29 +345,11 @@ class GameSocket(tornado.websocket.WebSocketHandler):
 
 # |--------------------------End of _monitorWins--------------------------------|
 
-#  |-----------------------------------------------------------------------------|
-# _freeUpCard :-
-# |-----------------------------------------------------------------------------|
-    def _freeUpCard(self, data, gameRoom):
-        card = data.get("card")
-        if "JH" in self._cards:
-            self._cards.remove("JH")
-            gameRoom['deck'].append("JH")
-        elif "JS" in self._cards:
-            self._cards.remove("JS")
-            gameRoom['deck'].append("JS")
-        cardID = data.get("x")+'_'+data.get("y")+"_"+card
-        newCard = gameRoom['deck'].pop(0)
-        self._cards.append(newCard)
-        for connection in gameRoom['members']:
-            connection.write_message({'messageType': 'free',
-                                      'cardID': cardID,
-                                      'teamName': self._team})
-# |--------------------------End of _freeUpCard---------------------------------|
 
 # |-----------------------------------------------------------------------------|
 # _nextMemberTurn :-
 # |-----------------------------------------------------------------------------|
+
     def _nextMemberTurn(self, gameID):
         # current member gets his/her new card
         self.write_message({"messageType": 'newCard',

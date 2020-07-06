@@ -483,25 +483,24 @@ async function handleConference(messageStream) {
       imgTag.className = "occupied-win";
       imgTag.parentElement.children[1].className = "overlayshowwin";
       imgTag.parentElement.children[1].style.background = dataObj["teamName"];
-      if (!(dataObj["teamName"] in teamWin)) {
-        teamWin[dataObj["teamName"]] = 1;
+    }
+    if (!(dataObj["teamName"] in teamWin)) {
+      teamWin[dataObj["teamName"]] = 1;
+    }
+    else {
+      var winnerteam = null;
+      switch (dataObj["teamName"]) {
+        case "#0000ff":
+          winnerteam = "Blue";
+          break;
+        case "#00ff00":
+          winnerteam = "Green";
+          break;
+        case "#ff0000":
+          winnerteam = "Read";
+          break;
       }
-      else {
-        var winnerteam = null;
-        switch (dataObj["teamName"]) {
-          case "#0000ff":
-            winnerteam = "Blue";
-            break;
-          case "#00ff00":
-            winnerteam = "Green";
-            break;
-          case "#ff0000":
-            winnerteam = "Read";
-            break;
-
-        }
-        alert("Game Over " + winnerteam + " wins");
-      }
+      alert("Game Over " + winnerteam + " wins");
     }
   }
   // free up an occupied card
